@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>three.js WebRTC template</title>
+
+    <meta
+      name="viewport"
+      content="initial-scale=1,maximum-scale=1,user-scalable=no"
+    />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script src="js/index.js" type="module"></script>
+    <div id="info">Description</div>
+    <style>
+      body {
+        overflow: hidden;
+
+      }
+      canvas { 
+        position: fixed;
+
+      }
+      #info {
+        position: absolute;
+        right: 0px;
+        top: 0px;
+        height: 2vh;
+        width: 10vh;
+        text-align: right;
+        z-index: 100;
+        display:block;
+        background: rgba(169,169,169, 0.25);
+        padding-right: 10px;
+        visibility: hidden;
+      }
+    </style>
+  </head>
+
+  <body style="background: yellow; margin: 0; padding: 0">
+    <div id="canvas-container"></div>
+  </body>
+</html>
