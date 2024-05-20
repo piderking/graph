@@ -7,7 +7,7 @@ import * as THREE from "three";
  * @param {object} position - x, y, z of the box, default to 
  */
 export class Box{
-    constructor(scene, scale, position, color){
+    constructor(scene, uuid, scale, position, color){
         this.scene = scene;
         this.scale = scale
         this.position = position
@@ -22,7 +22,8 @@ export class Box{
         this._mesh.position.set(position.x, position.y, position.z);
         
         // Set ID
-        this.uuid = this._mesh.uuid;
+        this.uuid = uuid;
+        this._mesh.uuid = uuid;
 
         // Add to Scene
         this.scene.add(this._mesh)
@@ -52,7 +53,7 @@ export class Points{
         this._mat.color = this.color
 
     }
-    constructor(scene, scale, position, points, color, size){
+    constructor(scene, uuid, scale, position, points, color, size){
         this.color = color
         this.scene = scene;
         this.scale = scale
@@ -75,8 +76,9 @@ export class Points{
         this._mesh.scale.set(scale, scale, scale)
         this._mesh.position.set(position.x, position.y, position.z)
         
-        // Set ID
-        this.uuid = this._mesh.uuid;
+        // Set ID and set meshes ID to it
+        this.uuid = uuid;
+        this._mesh.uuid = uuid;
 
         // Add to Scene
         this.scene.add(this._mesh)

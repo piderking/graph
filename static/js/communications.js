@@ -49,9 +49,9 @@ export class Communications {
         objects.forEach((object) => {
           switch (object.type){
             case "box":
-              this.addBox(object.scale, object.position, object.color)
+              this.addBox(object.uuid, object.scale, object.position, object.color)
             case "point cloud":
-              this.addPointCloud(object.scale, object.position, object.points, object.color, object.size)
+              this.addPointCloud(object.scale, object.scale, object.position, object.points, object.color, object.size)
           }
         })
         
@@ -82,7 +82,7 @@ export class Communications {
         console.log(`Box Event of Type ${data.event}`)
         if(data.event == "add"){
           console.log("Adding Box")
-          this.addBox(data.scale, data.position, data.color)
+          this.addBox(data.uuid, data.scale, data.position, data.color)
         } else if (data.event == "remove"){
           this.objects.forEach((box, index)=>{
             if (box.uuid == data.uuid){
@@ -108,7 +108,7 @@ export class Communications {
         console.log(`Point Cloud Event of Type ${data.event}`)
         if(data.event == "add"){
           console.log("Adding Point Cloud")
-          this.addPointCloud(data.scale, data.position, data.points, data.color, data.size)
+          this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size)
         } else if (data.event == "remove"){
           this.object.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
@@ -132,8 +132,8 @@ export class Communications {
       
 
     }
-    addBox(scale, position, color){
-      this.objects.push(new Box(this.scene, scale, position, color ))
+    addBox(uuid, scale, position, color){
+      this.objects.push(new Box(this.scene, uuid, scale, position, color ))
     }
     removeBox(id){
       const object = scene.getObjectByProperty( 'uuid', id );
@@ -144,9 +144,9 @@ export class Communications {
       // TODO Remove from list
     }
     
-    addPointCloud(scale, position, points, color, size){
+    addPointCloud(scale, uuid, position, points, color, size){
       //this.objects.push(new Points(this.scene, scale, position, points, color, size))
-      this.objects.push(new Points(this.scene, scale, position, points, color, size))
+      this.objects.push(new Points(this.scene,uuid, scale, position, points, color, size))
     }
     removePointCloud(id){
       const object = scene.getObjectByProperty( 'uuid', id );

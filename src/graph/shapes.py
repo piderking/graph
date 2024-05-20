@@ -19,7 +19,7 @@ class Shape:
     
 
 class Box(Shape):
-    def __init__(self, scale: dict, position: dict, color: str or int, event: str = "add", uuid: None or str = None) -> None:
+    def __init__(self, scale: dict, position: dict, color: str or int, event: str = "add", uuid: None or str = None) -> None: # type: ignore
         self.scale = scale
         self.position = position
         self.color = color
