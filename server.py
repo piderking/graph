@@ -1,4 +1,4 @@
-from flask import Flask, Response, join_room, leave_room, render_template, url_for, request
+from flask import Flask, Response, render_template, url_for, request
 from flask_socketio import SocketIO, send,emit
 from uuid import uuid4
 from typing import Type
@@ -100,7 +100,38 @@ class Data:
             }, to=_id)
             print("Client ({}) finished sync".format(_id))
         
+
+
         # TODO Add on Box, and Point Cloud to server to cache so new instances will open with them
+        @self.app.route("/point")
+        def nPoint():
+            print("Creating Point")
+            self.objects.append(Point_Cloud.from_dict(request.json).as_dict())
+            self.socketio.emit("point", Point_Cloud.from_dict(request.json).as_dict())
+            return self.objects
+        @self.app.route("/box")
+        def nBox():
+            print("Creating Box")
+            box = Box.from_dict(request.json)
+            self.objects.append(box.as_dict())
+            self.socketio.emit("box", box.as_dict())
+            return box.as_dict()
+        
+        @self.app.route("/remove")
+        def nRemove():
+            print("Removing Object")
+            print(request.json)
+            dic = dict(request.json)
+            for c, i in enumerate(self.objects):
+                if i["uuid"] == ["uuid"]:
+                    self.objects.pop(c)
+                    print(dic)
+                    self.socketio.emit(dic["type"], {
+                        "uuid":dic["uuid"],
+                        "event": "remove"
+                    })
+                    return self.objects
+            raise IndexError("The Provided UUID has no index in python array")
 
            
  

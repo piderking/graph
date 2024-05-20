@@ -69,5 +69,5 @@ class Point_Cloud(Shape):
                 "event": self.event       
             }
     @staticmethod
-    def from_dict(data: dict):
+    def from_dict(data):
         return Point_Cloud(data["scale"], data["size"], data["position"], data["color"], data["points"], event=data["event"], uuid=data["uuid"])

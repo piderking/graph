@@ -87,6 +87,9 @@ export class Communications {
           this.objects.forEach((box, index)=>{
             if (box.uuid == data.uuid){
               this.box[index].bremove()
+              this.box.splice(index, 1)
+              this.socket.send("Removed object " + pc.uuid)
+
               return
             }
           })
@@ -110,6 +113,9 @@ export class Communications {
           this.object.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
               this.box[pc].bremove()
+              this.box.splice(index, 1)
+              console.log("Removing " + pc.uuid)
+              this.socket.send("Removed object " + pc.uuid)
               return
             }
           })
