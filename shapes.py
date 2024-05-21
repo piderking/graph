@@ -41,7 +41,8 @@ class Box(Shape):
             }
     @staticmethod
     def from_dict(data):
-        return Box(data["scale"], data["position"], data["color"], event=data["event"], uud=data["uuid"])
+        return Box(data["scale"], data["position"], data["color"], event=data["event"], uuid=data["uuid"])
+    
 class Point_Cloud(Shape):
     def __init__(self, scale: int, size: int, position: dict, color: str or int, points: list, event: str = "add", uuid: None or str = None) -> None:
         self.scale = scale

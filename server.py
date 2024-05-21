@@ -52,10 +52,6 @@ class Data:
 
         }
 
-        # Data Providers
-        self.providers = {
-
-        }
 
         # Methods Define
         @self.app.route("/")
@@ -120,20 +116,45 @@ class Data:
         @self.app.route("/remove")
         def nRemove():
             print("Removing Object")
-            print(request.json)
             dic = dict(request.json)
             for c, i in enumerate(self.objects):
-                if i["uuid"] == ["uuid"]:
+                if i["uuid"] == dic["uuid"]:
+                    print("Found Element")
                     self.objects.pop(c)
-                    print(dic)
                     self.socketio.emit(dic["type"], {
                         "uuid":dic["uuid"],
                         "event": "remove"
                     })
                     return self.objects
             raise IndexError("The Provided UUID has no index in python array")
+        
+        @self.app.route("/move")
+        def nMove():
+            print("Moving Object")
+            dic = dict(request.json)
+            for c, i in enumerate(self.objects):
+                if i["uuid"] == dic["uuid"]:
+                    print(self.objects[c])
+                    self.objects[c]["position"] = dic["position"]
+                    self.socketio.emit(dic["type"], {
+                        "uuid":dic["uuid"],
+                        "position":dic["position"],
+                        "event": "move"
+                    })
+                    return self.objects
+            raise IndexError("The Provided UUID has no index in python array")
 
-           
+        @self.app.route("/objects")
+        def all_objects():
+            uuid_only = bool(request.args.get("uuid_only"))
+            self.socketio.emit("objects", {})
+            if uuid_only:
+                print("UUID")
+                return [
+                    item["uuid"] for item in self.objects
+                ]
+            else:
+                return self.objects
  
     @property
     def objects(self):

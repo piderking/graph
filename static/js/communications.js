@@ -31,7 +31,7 @@ export class Communications {
       });
       console.log("SocketIO Initalized... Informing")
       this.socket.emit("init", {}) // No Objects saved locally yet
-
+      
       console.log("Trying to Sync Data")
       this.socket.on("sync", (data)=>{
         if (this.synced){
@@ -41,7 +41,7 @@ export class Communications {
         this.synced = true // So more syncs can't accidenatally be sent
         console.log("Starting Sync of Data")
         console.log(`Amount of objects to sync: ${data.len}`)
-        console.log(`Client UUID: ${data.sid}... Matches: ${"True" ? data.sid == this.socket.id : "False"}`)
+        console.log(`Client SID: ${data.sid}... Matches: ${"True" ? data.sid == this.socket.id : "False"}`)
         console.log(data.objects)
         const objects = data.objects
         // TODO Add Objects Here (Assume Everything is being added)
@@ -51,7 +51,8 @@ export class Communications {
             case "box":
               this.addBox(object.uuid, object.scale, object.position, object.color)
             case "point cloud":
-              this.addPointCloud(object.scale, object.scale, object.position, object.points, object.color, object.size)
+              console.log(object)
+              this.addPointCloud(object.uuid,object.scale, object.position, object.points, object.color, object.size)
           }
         })
         
@@ -61,12 +62,24 @@ export class Communications {
 
 
     }
+
+    /////////////////////////////////
+    //// DEFINE LISTENING EVENTS ////
+    /////////////////////////////////
     async sit(){
       console.log("Waiting on events..")
+
       // Kill Event
       this.socket.on("kill", (data)=>{
         window.close()
       })
+      
+      // Display Objects Event
+      this.socket.on("objects", (data)=>{
+        console.log("Sever Requested to Display Objects")
+        console.log(this.objects)
+      })
+      // Top Text
       this.socket.on("text", (data)=> {
         document.getElementById("info").innerText = data.text
         document.getElementById("info").style.visibility = "visible"
@@ -81,103 +94,79 @@ export class Communications {
       this.socket.on("box", (data)=>{
         console.log(`Box Event of Type ${data.event}`)
         if(data.event == "add"){
-          console.log("Adding Box")
           this.addBox(data.uuid, data.scale, data.position, data.color)
         } else if (data.event == "remove"){
           this.objects.forEach((box, index)=>{
             if (box.uuid == data.uuid){
-              this.box[index].bremove()
-              this.box.splice(index, 1)
-              this.socket.send("Removed object " + pc.uuid)
-
+              this.remove(index)
               return
             }
           })
         } else if (data.event == 'move'){
           this.objects.forEach((box, index)=>{
             if (box.uuid == data.uuid){
-              this.box[index].move(data.position.x, data.position.y, data.position.z )
+              this.objects[index].move(data.position.x, data.position.y, data.position.z )
               return
             }
           })
         }
         
       })
+
       // Point CLoud Event
       this.socket.on("point", (data)=>{
         console.log(`Point Cloud Event of Type ${data.event}`)
         if(data.event == "add"){
-          console.log("Adding Point Cloud")
           this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size)
         } else if (data.event == "remove"){
-          this.object.forEach((pc, index)=>{
+          this.objects.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
-              this.box[pc].bremove()
-              this.box.splice(index, 1)
-              console.log("Removing " + pc.uuid)
-              this.socket.send("Removed object " + pc.uuid)
+              this.remove(index)
               return
             }
           })
         } else if (data.event == 'move'){
-          this.object.forEach((pc, index)=>{
+          console.log("MOVING SLKDJFKLSJDF")
+          this.objects.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
-              this.pc[index].move(data.position.x, data.position.y, data.position.z )
+              this.objects[index].move(data.position.x, data.position.y, data.position.z )
               return
             }
           })
+        } else {
+          console.log("Uncaught Event of type " + data.event + " with UUID " + data.uuid)
         }
         
       })
       
 
     }
+    //////////////////////////////
+    //// Wrapper Class Events ////
+    //////////////////////////////
     addBox(uuid, scale, position, color){
-      this.objects.push(new Box(this.scene, uuid, scale, position, color ))
+      let box = new Box(this.scene, uuid, scale, position, color )
+      this.objects.push(box)
+      return box
     }
-    removeBox(id){
-      const object = scene.getObjectByProperty( 'uuid', id );
-
-      object.geometry.dispose();
-      object.material.dispose();
-      this.scene.remove( object );
-      // TODO Remove from list
-    }
-    
-    addPointCloud(scale, uuid, position, points, color, size){
-      //this.objects.push(new Points(this.scene, scale, position, points, color, size))
-      this.objects.push(new Points(this.scene,uuid, scale, position, points, color, size))
-    }
-    removePointCloud(id){
-      const object = scene.getObjectByProperty( 'uuid', id );
-
-      object.geometry.dispose();
-      object.material.dispose();
-      this.scene.remove( object );
+    remove(index){
+      if(this.objects.length > 0){
+        this.objects[index].remove()
+        return this.objects.splice(index, 1)[0]
+        
+      }else{
+        console.error("Tried to remove item but object.length is already gone")
+        return
+      }
     }
     
+    addPointCloud(uuid, scale, position, points, color, size){
+      let _points = new Points(this.scene, uuid, scale, position, points, color, size)
+      this.objects.push(_points)
+      return _points
+    }
+
 
 
 }
 
-
-/*
-    // add a callback for a given event
-    on(event, callback) {
-      console.log(`Setting ${event} callback.`);
-      this.userDefinedCallbacks[event].push(callback);
-    }
-  
-    sendPosition(position) {
-      this.socket?.emit("move", position);
-    }
-  
-    sendData(data) {
-      this.socket?.emit("data", data);
-    }
-  
-    callEventCallback(event, data) {
-      this.userDefinedCallbacks[event].forEach((callback) => {
-        callback(data);
-      });
-    } */

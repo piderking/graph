@@ -25,9 +25,21 @@ class Graph:
         ).as_dict())
 
         return req.json()[0]["uuid"]
+    def graphPC(self, point_cloud: Point_Cloud) -> str:
+
+        data=list(np.reshape(data, (data.size))) # Flatten
+        data = [float(d) for d in data]
+
+        req = requests.get(self.url + "point", json=point_cloud.as_dict())
+
+        return req.json()[0]["uuid"]
     
     def removeObject(self, uuid: str, type: str) -> dict:
         req = requests.get(self.url + "remove", json={"uuid":uuid, "type":type})
+        return req.json
+    
+    def moveObject(self, uuid: str, type: str, x:float, y:float, z:float) -> dict:
+        req = requests.get(self.url + "move", json={"uuid":uuid, "type":type, "position":{"x":x, "y":y, "z":z}})
         return req.json
     
 

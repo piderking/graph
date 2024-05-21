@@ -22,11 +22,14 @@ export class Box{
         this._mesh.position.set(position.x, position.y, position.z);
         
         // Set ID
-        this.uuid = uuid;
-        this._mesh.uuid = uuid;
+        this.uuid = uuid
+        //this._mesh.uuid = uuid;
 
         // Add to Scene
         this.scene.add(this._mesh)
+
+        console.log(`Box Created of UUID: ${this.uuid}`)
+
     }
     object(){
         return this._mesh
@@ -35,7 +38,7 @@ export class Box{
         this._mesh?.position.set(x, y, z);
     }
     
-    bremove(){
+    remove(){
         this._geo.dispose();
         this._mat.dispose();
         this.scene.remove( this._mesh );
@@ -60,6 +63,7 @@ export class Points{
         this.position = position
         this.size = size
 
+
         this._mat =  new THREE.PointsMaterial({
             color: this.color
         })
@@ -78,10 +82,12 @@ export class Points{
         
         // Set ID and set meshes ID to it
         this.uuid = uuid;
-        this._mesh.uuid = uuid;
 
         // Add to Scene
         this.scene.add(this._mesh)
+
+        console.log(`Point Cloud Created of UUID: ${this.uuid}`)
+
 
     }
     object(){
@@ -91,9 +97,9 @@ export class Points{
         this._mesh?.position.set(x, y, z);
     }
     
-    bremove(){
-        this._geo.dispose();
-        this._mat.dispose();
+    remove(){
+        //this._geo.dispose();
+        //this._mat.dispose();
         this.scene.remove( this._mesh );
         console.log(`Point Clouod Removed of UUID: ${this.uuid}`)
     }
