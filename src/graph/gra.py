@@ -1,8 +1,11 @@
 import requests
 import numpy as np
-from shapes import *
+from .shapes import *
+from .util.config import URL
 class Graph:
-    def __init__(self, url) -> None:
+    def __init__(self, url: str or None=URL) -> None:
+        if url is None:
+            self.url = URL
         self.url = url if url[-1] == "/" else url + "/" #"/"
 
 
@@ -13,8 +16,8 @@ class Graph:
         #self.graph(np.array([x for x in range(36)]), 1, 1, {"x":1,"y":1,"z":1}, 9111)
         print("Done")
 
-    def box(self, scale, position, color, event):
-         requests.get(self.url + "", json=Box(scale, position, color, event=event))
+    def box(self, scale: dict["x/y/z":float], position: dict["x/y/z":float], color:int, event: str):
+        requests.get(self.url + "", json=Box(scale, position, color, event=event))
     def graph(self, data: np.ndarray,scale: int,size: int,position: dict,color: str) -> str:
 
         data=list(np.reshape(data, (data.size))) # Flatten
