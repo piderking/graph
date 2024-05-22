@@ -212,7 +212,7 @@ export class Text{
 export class Points{
     constructor(scene, uuid, _points, options){
         this.points = []
-        this.lines;
+        this.drawn_lines = []
         // THREEjs Scene + Obj UUID
         this.scene = scene;
         this.uuid = uuid; 
@@ -256,22 +256,23 @@ export class Points{
         // Interpret Points
         _points.forEach((el, index, a)=>{
             if (index % 3 == 0){
-                this.points.push( new THREE.Vector3(a[index], a[index+1], a[index+2]))
+                this.points.push( new THREE.Vector3(a[index]*this.scale.x+this.position.x, a[index+1]*this.scale.y+this.position.y, a[index+2]*this.scale.z+this.position.z))
             }
         })
 
         // Lines 
         //TODO Lines are not working, all data is here
         if (this.lines){
-            const line_points = [];
             connections.forEach((el, index)=>{
-                line_points.push(el[0], el[1])
+                
+                let line = new THREE.LineSegments( 
+                    new THREE.BufferGeometry().setFromPoints( [this.points[el[0]], this.points[el[1]]] ), 
+                    new THREE.LineBasicMaterial({ color: 9001, 	linewidth: 4 })
+                )
+                //line.scale(this.scale.x, this.scale.y, this.scale.z)
+                this.drawn_lines.push(line)
+                this.scene.add(line)
             })
-            const line = new THREE.Line( new THREE.BufferGeometry().setFromPoints( line_points ), new THREE.LineBasicMaterial({ color: 4000 }))
-            this.scene.add(line)
-            this.lines =line
-
-            
         } else {
             console.log("No Connection on Point CLoud: " + this.uuid)
         }
@@ -283,8 +284,8 @@ export class Points{
            this._mat
         )
 
-        this._mesh.scale.set(this.scale.x, this.scale.y, this.scale.z, )
-        this._mesh.position.set(this.position.x, this.position.y, this.position.z)
+        //this._mesh.scale.set(this.scale.x, this.scale.y, this.scale.z, )
+        //this._mesh.position.set(this.position.x, this.position.y, this.position.z)
         
 
 

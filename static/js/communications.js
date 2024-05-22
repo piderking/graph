@@ -55,7 +55,7 @@ export class Communications {
               this.addPointCloud(object.uuid,object.scale, object.position, object.points, object.color, object.size, object.lines, object.text)
           }
         })
-        
+
         // Now Accept New Objects
         this.sit()
       })

@@ -39,6 +39,22 @@ function init() {
   //renderer.setClearColor(new THREE.Color("lightblue"));
   renderer.setSize(width, height);
   
+  
+  /*
+        // Test Lines
+  const points = [
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(1.5, 1, 1),
+  ]
+  // Test THREEJS Code Here
+  let line = new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints(points),
+    new THREE.LineBasicMaterial({ color: 1234, 	linewidth: 4 })
+  )
+    scene.add(line)
+  */
+
+  
 
   //Push the canvas to the DOM
   let domElement = document.getElementById("canvas-container");
@@ -58,6 +74,8 @@ function init() {
 
   // Start the loop
   update();
+
+  
 }
 
 init();
