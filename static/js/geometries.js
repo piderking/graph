@@ -7,8 +7,8 @@ import { FontLoader } from "./util/FontLoader.js"
 const loader = new FontLoader();
 const font_cache = []
 
-const toRGBString(color){
-    return `rgb(${color.r, color.g, color.b})`
+const toRGBString = (color) => {
+    return new THREE.Color(color)
 } 
 const loadFont = (url) => {
     let index = 0;
@@ -58,7 +58,7 @@ export class Box{
         options ??= {}
         options.scale ??= {x:1,y:1,z:1}
         options.position ??= {x:1,y:1,z:1}
-        options.color ??= (Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255)) 
+        options.color ??= {r:Math.floor(Math.random() * 255), g:Math.floor(Math.random() * 255), b:Math.floor(Math.random() * 255)}
 
         // Define based on options (object) parameter
         this.scale = options.scale
@@ -123,7 +123,7 @@ export class Text{
         options ??= {}
         options.scale ??= { x:1, y:1, z:1}
         options.position ??= { x:1, y:1, z:1}
-        options.color ??= (Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255))
+        options.color ??= Math.floor(Math.random() * 10000) - 1
         
         // Asign Options
         this.scale = options.scale
@@ -207,12 +207,11 @@ export class Text{
     }
 }
 export class Points{
-    constructor(scene, uuid, points, options){
-
+    constructor(scene, uuid, _points, options){
+        this.points = []
         // THREEjs Scene + Obj UUID
         this.scene = scene;
         this.uuid = uuid; 
-        this.points = points
         this._alive = true;
 
         
@@ -220,17 +219,18 @@ export class Points{
             console.error("UUID is undefined")
             alert("UUID is undefined") // developer mode
         }
-        if (typeof(points) == undefined){
+        if (typeof(_points) == undefined){
             console.error("Passed Points are UNDEFINED")
             alert("UUID is undefined") // developer mode
-        }
+        } 
 
         // Assign Static Variables if Variables passed are undefined
         options ??= {}
         options.scale ??= 1
         options.size ??= 1
         options.position ??= { x:1, y:1, z:1}
-        options.color ??= (Math.floor(Math.random() * 255), Math.floor(Math.random() * 255), Math.floor(Math.random() * 255))
+        options.color ??= 9001
+        
         
         // scale, position, points, color, size from options (modified) parameter
         this.color = options.color
@@ -240,20 +240,26 @@ export class Points{
 
 
         this._mat =  new THREE.PointsMaterial({
-            color: toRGBString(this.color)
+            color: this.color
         })
-        this._mat.size = size
+        this._mat.size = this.size
+
+        // Interpret Points
+        _points.forEach((el, index, a)=>{
+            if (index % 3 == 0){
+                this.points.push( new THREE.Vector3(a[index], a[index+1], a[index+2]))
+            }
+        })
+
+        // Display Poitns
+        this._geo = new THREE.BufferGeometry().setFromPoints(this.points)
         this._mesh = new THREE.Points(
-            new THREE.BufferGeometry().setAttribute("position", new THREE.BufferAttribute(
-                new Float32Array( 
-                    points
-                ), 3
-            )),
+            this._geo,
            this._mat
         )
 
-        this._mesh.scale.set(scale, scale, scale)
-        this._mesh.position.set(position.x, position.y, position.z)
+        this._mesh.scale.set(this.scale.x, this.scale.y, this.scale.z, )
+        this._mesh.position.set(this.position.x, this.position.y, this.position.z)
         
 
 

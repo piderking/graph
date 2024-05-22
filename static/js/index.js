@@ -26,6 +26,8 @@ function init() {
   camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
   camera.position.set(0, 3, 6);
   scene.add(camera);
+  scene.background = new THREE.Color( 255, 255, 255 );
+
 
   communications = new Communications(scene)
 

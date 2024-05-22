@@ -161,7 +161,8 @@ export class Communications {
     }
     
     addPointCloud(uuid, scale, position, points, color, size){
-      let _points = new Points(this.scene, uuid, scale, position, points, color, size)
+      let _points = new Points(this.scene, uuid, points, {scale, position, points, color, size})
+      console.log(_points)
       this.objects.push(_points)
       return _points
     }
