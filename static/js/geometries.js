@@ -18,6 +18,7 @@ const loadFont = (url) => {
     
         // onLoad callback
         function ( font ) {
+            console.log(font  )
             // do something with the font
             font_cache.push({
                 font: font,
@@ -37,7 +38,7 @@ const loadFont = (url) => {
             console.log( 'An error happened' );
         }
     );
-    console.log(font_cache[index])
+    console.log(font_cache)
     return font_cache[index] // Return List Element of the Index (newly created)
 }
 /**
@@ -139,7 +140,7 @@ export class Text{
         this.font = () => {
             let font;
 
-            font_cache.foreach((el)=>{
+            font_cache.forEach((el)=>{
                 if (el.url == this._url){
                     font = el.font
                 }
@@ -149,6 +150,8 @@ export class Text{
 
             return inCache
         }
+        
+        this.font = this.font()
         // Text Options
         this.options.texto ??= {
             size: 80,
@@ -171,7 +174,7 @@ export class Text{
             bevelThickness: this.options.texto.bevelThickness,
             bevelSize: this.options.texto.bevelSize,
             bevelOffset: this.options.texto.bevelOffset,
-            bevelSegments: this.options.text.bevelSegments
+            bevelSegments: this.options.texto.bevelSegments
         } );
         this._mat = new THREE.MeshBasicMaterial({
             color: new THREE.Color(

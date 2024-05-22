@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import {Box, Points} from "./geometries.js"
+import {Box, Points, Text} from "./geometries.js"
 export class Communications {
 
     constructor(scene){
@@ -69,6 +69,9 @@ export class Communications {
     async sit(){
       console.log("Waiting on events..")
 
+      //t = new Text(this.scene, "I LIKE BOYS", "MEN", {
+        
+      //})
       // Kill Event
       this.socket.on("kill", (data)=>{
         window.close()
