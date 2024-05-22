@@ -52,7 +52,7 @@ export class Communications {
               this.addBox(object.uuid, object.scale, object.position, object.color)
             case "point cloud":
               console.log(object)
-              this.addPointCloud(object.uuid,object.scale, object.position, object.points, object.color, object.size)
+              this.addPointCloud(object.uuid,object.scale, object.position, object.points, object.color, object.size, object.lines, object.text)
           }
         })
         
@@ -120,7 +120,7 @@ export class Communications {
       this.socket.on("point", (data)=>{
         console.log(`Point Cloud Event of Type ${data.event}`)
         if(data.event == "add"){
-          this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size)
+          this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size, data.lines, data.text)
         } else if (data.event == "remove"){
           this.objects.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
@@ -148,7 +148,7 @@ export class Communications {
     //// Wrapper Class Events ////
     //////////////////////////////
     addBox(uuid, scale, position, color){
-      let box = new Box(this.scene, uuid, scale, position, color )
+      let box = new Box(this.scene, uuid,{ scale, position, color })
       this.objects.push(box)
       return box
     }
@@ -163,8 +163,8 @@ export class Communications {
       }
     }
     
-    addPointCloud(uuid, scale, position, points, color, size){
-      let _points = new Points(this.scene, uuid, points, {scale, position, points, color, size})
+    addPointCloud(uuid, scale, position, points, color, size, lines, text){
+      let _points = new Points(this.scene, uuid, points, {scale, position, points, color, size, lines, text})
       console.log(_points)
       this.objects.push(_points)
       return _points

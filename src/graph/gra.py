@@ -18,15 +18,15 @@ class Graph:
 
     def box(self, scale: dict["x/y/z":float], position: dict["x/y/z":float], color:int, event: str):
         requests.get(self.url + "", json=Box(scale, position, color, event=event))
-    def graph(self, data: np.ndarray,scale: dict,size: int,position: dict,color: str, lines: bool = True, text: bool = True) -> str:
+    def graph(self, data: np.ndarray,scale: dict,size: int,position: dict,color: str, lines: bool, text: bool) -> str:
+        print(lines)
         data=list(np.reshape(data, (data.size))) # Flatten
         data = [float(d) for d in data]
-        pc = Point_Cloud(
-            scale, size, position, color, data, event="add"
-        ).as_dict()
-        pc["text"] = text
-        pc["lines"] = lines
-        req = requests.get(self.url + "point", json=pc)
+
+        req = requests.get(self.url + "point", json=Point_Cloud(
+            scale, size, position, color, data, lines=lines, text=text, event="add"
+        ).as_dict())
+
 
         return req.json()[0]["uuid"]
     def graphPC(self, point_cloud: Point_Cloud) -> str:

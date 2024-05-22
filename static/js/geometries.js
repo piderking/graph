@@ -6,7 +6,7 @@ import { FontLoader } from "./util/FontLoader.js"
 
 const loader = new FontLoader();
 const font_cache = []
-
+const connections = [[3, 4], [0, 5], [17, 18], [0, 17], [13, 14], [13, 17], [18, 19], [5, 6], [5, 9], [14, 15], [0, 1], [9, 10], [1, 2], [9, 13], [10, 11], [19, 20], [6, 7], [15, 16], [2, 3], [11, 12], [7, 8]]
 const toRGBString = (color) => {
     return new THREE.Color(color)
 } 
@@ -212,6 +212,7 @@ export class Text{
 export class Points{
     constructor(scene, uuid, _points, options){
         this.points = []
+        this.lines;
         // THREEjs Scene + Obj UUID
         this.scene = scene;
         this.uuid = uuid; 
@@ -226,13 +227,16 @@ export class Points{
             console.error("Passed Points are UNDEFINED")
             alert("UUID is undefined") // developer mode
         } 
-
+        
         // Assign Static Variables if Variables passed are undefined
         options ??= {}
         options.scale ??= 1
         options.size ??= 1
         options.position ??= { x:1, y:1, z:1}
         options.color ??= 9001
+        options.text ??= false
+        options.lines ??= false
+
         
         
         // scale, position, points, color, size from options (modified) parameter
@@ -240,6 +244,8 @@ export class Points{
         this.scale = options.scale
         this.position = options.position
         this.size = options.size
+        this.lines = options.lines
+        this.text = options.text
 
 
         this._mat =  new THREE.PointsMaterial({
@@ -253,6 +259,22 @@ export class Points{
                 this.points.push( new THREE.Vector3(a[index], a[index+1], a[index+2]))
             }
         })
+
+        // Lines 
+        //TODO Lines are not working, all data is here
+        if (this.lines){
+            const line_points = [];
+            connections.forEach((el, index)=>{
+                line_points.push(el[0], el[1])
+            })
+            const line = new THREE.Line( new THREE.BufferGeometry().setFromPoints( line_points ), new THREE.LineBasicMaterial({ color: 4000 }))
+            this.scene.add(line)
+            this.lines =line
+
+            
+        } else {
+            console.log("No Connection on Point CLoud: " + this.uuid)
+        }
 
         // Display Poitns
         this._geo = new THREE.BufferGeometry().setFromPoints(this.points)

@@ -104,6 +104,7 @@ class Data:
             print("Creating Point")
             self.objects.append(Point_Cloud.from_dict(request.json).as_dict())
             self.socketio.emit("point", Point_Cloud.from_dict(request.json).as_dict())
+            print(Point_Cloud.from_dict(request.json).as_dict()["lines"])
             return self.objects
         @self.app.route("/box")
         def nBox():
