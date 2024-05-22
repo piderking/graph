@@ -5,6 +5,17 @@ from typing import Type
 from math import floor
 from shapes import *
 
+def dict_to_table(dic: dict) -> None:
+    """Visual Representation
+
+    Args:
+        dic (dict): _description_
+    """
+    _str = ["Dictionary: <{}>".format(id(dict))]
+    _str.append("".join(["-" for _ in range(len(_str[0]))]))
+    for c, d in enumerate(dic.keys()):
+        _str.append("{}|({})|{}".format("".join(["0" for x in range(floor(len(dic.keys())/10)-1)])+str(c), d, dic[d] if len(str(dic[d])) < 60 else str(dic[d])[:60]+"...")) 
+    print("\n".join(_str))
 class Data:
 
     def __init__(self, sync_db = False) -> None:
@@ -103,8 +114,8 @@ class Data:
         def nPoint():
             print("Creating Point")
             self.objects.append(Point_Cloud.from_dict(request.json).as_dict())
+            dict_to_table(Point_Cloud.from_dict(request.json).as_dict())
             self.socketio.emit("point", Point_Cloud.from_dict(request.json).as_dict())
-            print(Point_Cloud.from_dict(request.json).as_dict()["lines"])
             return self.objects
         @self.app.route("/box")
         def nBox():

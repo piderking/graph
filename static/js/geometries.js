@@ -260,6 +260,14 @@ export class Points{
             }
         })
 
+
+
+        // Display Poitns
+        this._geo = new THREE.BufferGeometry().setFromPoints(this.points)
+        this._mesh = new THREE.Points(
+            this._geo,
+           this._mat
+        )
         // Lines 
         //TODO Lines are not working, all data is here
         if (this.lines){
@@ -277,13 +285,6 @@ export class Points{
             console.log("No Connection on Point CLoud: " + this.uuid)
         }
 
-        // Display Poitns
-        this._geo = new THREE.BufferGeometry().setFromPoints(this.points)
-        this._mesh = new THREE.Points(
-            this._geo,
-           this._mat
-        )
-
         //this._mesh.scale.set(this.scale.x, this.scale.y, this.scale.z, )
         //this._mesh.position.set(this.position.x, this.position.y, this.position.z)
         
@@ -300,12 +301,24 @@ export class Points{
         return this._mesh
     }
     move(x, y, z){
+        this.position = {x, y, z}
         this._mesh?.position.set(x, y, z);
+
+        this?.drawn_lines.forEach((el,)=>{
+            el.geometry.translate(new THREE.Vector3(x, y, z))
+        })
+    }
+    scale(x, y, z){
+        this.scale = {x, y, z}
+        this._mesh?.scale.set(x, y, z);
+
+        this?.drawn_lines.forEach((el,)=>{
+            el.geometry.scale(new THREE.Vector3(x, y, z))
+        })
     }
     
     remove(){
-        //this._geo.dispose();
-        //this._mat.dispose();
+
         this.scene.remove( this._mesh );
         this._alive = false;
         console.log(`Point Clouod Removed of UUID: ${this.uuid}`)

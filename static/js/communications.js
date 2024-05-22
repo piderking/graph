@@ -129,10 +129,31 @@ export class Communications {
             }
           })
         } else if (data.event == 'move'){
-          console.log("MOVING SLKDJFKLSJDF")
           this.objects.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
               this.objects[index].move(data.position.x, data.position.y, data.position.z )
+              return
+            }
+          })
+          
+        }else if (data.event == 'set_color'){
+          this.objects.forEach((pc, index)=>{
+            if (pc.uuid == data.uuid){
+              this.objects[index].setColor(pc.color)
+              return
+            }
+          })
+        } else if (data.event == 'set_size'){
+          this.objects.forEach((pc, index)=>{
+            if (pc.uuid == data.uuid){
+              this.objects[index].setSize(pc.size)
+              return
+            }
+          })
+        }else if (data.event == 'scale'){
+          this.objects.forEach((pc, index)=>{
+            if (pc.uuid == data.uuid){
+              this.objects[index].scale(data.position.x, data.position.y, data.position.z )
               return
             }
           })
