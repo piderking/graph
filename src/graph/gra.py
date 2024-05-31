@@ -2,6 +2,8 @@ import requests
 import numpy as np
 from .shapes import *
 from .util.config import URL
+
+
 class Graph:
     def __init__(self, url: str or None=URL) -> None:
         if url is None:

@@ -2,9 +2,9 @@ import * as THREE from "three";
 import {Box, Points, Text} from "./geometries.js"
 export class Communications {
 
-    constructor(scene){
-        this.userDefinedCallbacks = {}
+    constructor(scene, cache){
         this.scene = scene
+        this.cache = cache
         this.synced = false
         this.objects = []
         this.socket = io("/", {
@@ -57,6 +57,7 @@ export class Communications {
         })
 
         // Now Accept New Objects
+
         this.sit()
       })
 

@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, send,emit
 from uuid import uuid4
 from typing import Type
 from math import floor
-from shapes import *
+from graph.shapes import *
 
 def dict_to_table(dic: dict) -> None:
     """Visual Representation
@@ -25,35 +25,6 @@ class Data:
             template_folder='templates')
         self.app.config['SECRET_KEY'] = 'secret!'
         self.socketio = SocketIO(self.app)
-        # Objects
-        """
-        BOX EXAMPLE
-        {
-                "uuid": "BONJOUR",
-                "type": "box",
-                "scale": {
-                    "x":1, "y": 1, "z": 1
-                },"position": {
-                    "x":x, "y": 1, "z": 1
-                } "color": 8008
-                
-            } for x in range(0, 10, 2)
-
-        POINT CLOUD EXAMPLE
-        {
-                "uuid":"sdfsdf",
-                "type":"point cloud",
-                "scale":10,
-                "size":1,
-                "position": {
-                    "x":1, "y": 1, "z": 1
-                },"points" : [
-                0, 0, 0,
-                0, 0, 1,
-                0, 0, 2,
-                ], "color": 88808
-        } 
-        """
         self._objects = [
             
         ]
@@ -80,14 +51,7 @@ class Data:
 
             return render_template("index.html")
         
-        @self.app.route("/box/")
-        def new_box():
-            self.objects = Box({"x":1,"y":1,"z":1}, {"x":1,"y":1,"z":1},9009)
-            return str(self.objects)
-        @self.app.route("/pc/")
-        def new_pc():
-            self.objects = Point_Cloud(1, 1, {"x":1,"y":1,"z":1}, 1111, [floor(x/3) for x in range(36)])
-            return str(self.objects)
+
         
         @self.socketio.on('connect')
         def connection():
@@ -116,7 +80,8 @@ class Data:
             self.objects.append(Point_Cloud.from_dict(request.json).as_dict())
             dict_to_table(Point_Cloud.from_dict(request.json).as_dict())
             self.socketio.emit("point", Point_Cloud.from_dict(request.json).as_dict())
-            return self.objects
+            return Point_Cloud.from_dict(request.json).as_dict()
+        
         @self.app.route("/box")
         def nBox():
             print("Creating Box")
@@ -153,8 +118,10 @@ class Data:
                         "position":dic["position"],
                         "event": "move"
                     })
-                    return self.objects
-            raise IndexError("The Provided UUID has no index in python array")
+                    return Response(self.objects, status=200)
+            return Response({
+                "exsists":False
+            })  
 
         @self.app.route("/objects")
         def all_objects():

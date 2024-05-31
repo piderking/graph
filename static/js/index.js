@@ -7,18 +7,19 @@
 import * as THREE from "three";
 import { Communications } from "./communications.js";
 import { OrbitControls } from './util/OrbitControls.js';
-
+import { Cache } from "./cache.js";
 
 let camera, renderer, scene;
 let controls;
 let communications;
 let scene_size = 0;
 let frameCount = 0;
-
+let cache;
 function init() {
   scene = new THREE.Scene();
 
-
+  cache = new Cache();
+  
 
   let width = window.innerWidth;
   let height = window.innerHeight;
@@ -29,7 +30,7 @@ function init() {
   scene.background = new THREE.Color( 255, 255, 255 );
 
 
-  communications = new Communications(scene)
+  communications = new Communications(scene, cache)
 
   //THREE WebGL renderer
   renderer = new THREE.WebGLRenderer({
