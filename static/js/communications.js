@@ -121,7 +121,12 @@ export class Communications {
       this.socket.on("point", (data)=>{
         console.log(`Point Cloud Event of Type ${data.event}`)
         if(data.event == "add"){
-          this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size, data.lines, data.text)
+          fetch(data.font_url).then(
+            t => t.text()
+          ).then(
+            p = () => {this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size, data.lines, r)}
+          )
+          
         } else if (data.event == "remove"){
           this.objects.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){

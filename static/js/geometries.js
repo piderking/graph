@@ -86,7 +86,7 @@ export class Box{
 }
 export class Text{
     
-    constructor(scene, uuid, text, cache, options, font){
+    constructor(scene, uuid, text, cache, options, font_text){
         // Assign Parameters
         this.scene = scene;
         this.cache = cache
@@ -109,8 +109,6 @@ export class Text{
         // Finish with Options
         this.options = options
 
-        // Create URL and Font Object
-        this._url ??= "fonts/lmk.json"
         
 
         // Text Options
@@ -125,14 +123,14 @@ export class Text{
             bevelOffset: 0,
             bevelSegments: 1
         }
-   
-        const json = JSON.parse( ); // you have to parse the data so it becomes a JS object 
+
+
+        const json = JSON.parse( font_text ); // you have to parse the data so it becomes a JS object 
         this.font = loader.parse(json)
-    
         this._geo = new TextGeometry( this.text, {
             font: this.font,
             size: this.options.texto.size,
-            depth: 1,
+            depth: this.options.texto.depth,
             curveSegments: this.options.texto.curveSegments,
             bevelEnabled: this.options.texto.bevelEnabled,
             bevelThickness: this.options.texto.bevelThickness,

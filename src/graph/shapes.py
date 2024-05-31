@@ -94,6 +94,7 @@ class Point_Cloud(Shape):
         self.uuid = uuid if not uuid is None else self.uuid
         self.lines = lines
         self.text = text
+        self.font_url = "fonts/lmk.json"
 
         super().__init__(url)
 
@@ -114,7 +115,8 @@ class Point_Cloud(Shape):
                 "points": self.point,
                 "event": self.event,
                 "lines": self.lines,
-                "text": self.text     
+                "text": self.text,
+                "font_url": self.font_url
             }
     @staticmethod
     def from_dict(data: dict):
