@@ -6,6 +6,7 @@ from math import floor
 from graph.shapes import Shape, Point_Cloud, Box
 import json
 from time import time
+import os
 def dict_to_table(dic: dict) -> None:
     """Visual Representation
 
@@ -19,7 +20,7 @@ def dict_to_table(dic: dict) -> None:
     print("\n".join(_str))
 class Data:
 
-    def __init__(self, sync_db = False) -> None:
+    def __init__(self, sync_db = True, fPath:str = os.path.join(os.path.abspath("."), "db.json")) -> None:
         self.app = Flask(__name__, 
             static_url_path='', 
             static_folder='static',
@@ -28,6 +29,9 @@ class Data:
         self.app.wsgi_app = AuthorizationMiddleWare(self.app.wsgi_app, self)
         self.app.config['SECRET_KEY'] = str(uuid4())
         self.socketio = SocketIO(self.app)
+        self.fPath = fPath
+
+
         self._objects = [
             
         ]
@@ -48,8 +52,11 @@ class Data:
             }
         ]
 
-        
-
+        if sync_db and os.path.exists(fPath):
+            jso: dict = json.load(open(fPath, "r"))
+            self._objects = jso.get("objects") if not jso.get("objects") is None else self.objects 
+            self.clients = jso.get("clients") if not jso.get("clients") is None else self.clients  
+            self.api = jso.get("api") if not jso.get("api") is None else self.objects   
 
         # Methods Define
         @self.app.route("/")
@@ -243,6 +250,10 @@ class Data:
                    clients for clients in self.clients
                 ], "number": len(self.clients)
             }
+        @self.app.route('/save')
+        def save():
+            self.saveToFile()
+            return self._objects
 
     @property
     def objects(self):
@@ -269,8 +280,20 @@ class Data:
             if api_user["id"] == uid:
                 self.api[i]["actions"].append(action)
     def run(self):
-        d.socketio.run(d.app,debug=True)
-
+        while True:
+            try:
+                d.socketio.run(d.app,debug=True)
+            except KeyboardInterrupt:
+                d.saveToFile()
+    def saveToFile(self):
+        print(self._objects)
+        open(self.fPath, "w").write(json.dumps(
+            {
+                "objects": self._objects,
+                "clients": self.clients,
+                "api": self.api
+            }
+        ))
 
 class AuthorizationMiddleWare():
     '''
