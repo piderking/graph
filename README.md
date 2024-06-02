@@ -25,5 +25,6 @@ obj = Point_Cloud(
 ```
 ### Mediapipe Usage
 - See other repository [Keyboard]()
+- Currently `db.json` has a mediapipe data in it.
 
 ### Contact
