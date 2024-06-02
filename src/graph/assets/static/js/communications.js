@@ -9,12 +9,6 @@ export class Communications {
         this.objects = []
         this.socket = io("/", {
           reconnectionDelayMax: 10000,
-          auth: {
-            token: ""
-          },
-          query: {
-            "my-key": "my-value"
-          }
         });
         
 

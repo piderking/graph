@@ -1,4 +1,5 @@
 """Modular Approach to Shapes
+    *** NOT WORKINGS YET ***
 
     Raises:
         NoURLSpecified: Functions which move the objects require the graph url
@@ -13,11 +14,11 @@ from .util.config import URL
 from .exceptions import ShapeNotFound, NoURLSpecified
 import numpy as np
 class Shape:
-    """Base Class"""
     uuid = str(uuid4())
     _type: str = "shape"
     url: str = URL
-    def __init__(self, url, uuid: str or None):
+    parameters: list = ["url", "uuid"]
+    def __init__(self, url: str or None = None, uuid: str or None = None):
         """Create a new Shape Class
 
         Args:
@@ -26,14 +27,16 @@ class Shape:
         """
         if not url is None: self.url = url
         if not uuid is None: self.uuid = uuid
-    
+
     def validURL(self):
         if self.url is None: raise NoURLSpecified(self._type)
     
+    
+        
     @abstractmethod
     def as_dict(self):
         return {
-            "uuid": self.uuid
+            key: self.__getattribute__(key) for key in self.parameters
         }
     def __repr__(self) -> str:
         return str(self.as_dict())
@@ -70,6 +73,7 @@ class Point_Cloud(Shape):
     """Create a point cloud
 
     """
+    parameters: list = []
     @staticmethod
     def reshape(data: np.ndarray or list) -> np.ndarray:
         data=np.array(data)
@@ -77,7 +81,7 @@ class Point_Cloud(Shape):
         data = [float(d) for d in data]
         return data
     
-    def __init__(self, url: str or np.ndarray or None, points: list, scale: dict={"x":1,"y":1, "z":1}, size: int = .1, position: dict = {"x":0,"y":0, "z":0}, color: int = 9001, event: str = "add", uuid: None or str = None, lines: bool = False, connections:list=[], font_url: str = "fonts/lmk.json") -> None:
+    def __init__(self, url: str or np.ndarray or None=None, points: list=[1,1,1], scale: dict={"x":1,"y":1, "z":1}, size: int = .1, position: dict = {"x":0,"y":0, "z":0}, color: int = 9001, event: str = "add", uuid: None or str = None, lines: bool = False, additional_connections:list=[], font_url: str = "fonts/lmk.json", type: str = "point cloud", **kwargs) -> None:
         """Point Cloud Object Representation
 
         Args:
@@ -93,7 +97,10 @@ class Point_Cloud(Shape):
             connections (list): List of [landmark#1,landmark#2,line_size,color] Defaults to [].
             font_url (str):  URL to font of text. Defaults to "fonts/lmk.json".
         """
-        self._type = "point cloud"
+        args = {**locals()}
+        for para in self.parameters:
+            self.__setattr__(para, args[para])
+        self.type = "point cloud"
         self.scale = scale
         self.position = position
         self.color = color
@@ -102,7 +109,7 @@ class Point_Cloud(Shape):
         self.event = event
         self.uuid = uuid if not uuid is None else self.uuid
         self.lines = lines
-        self.conections = connections
+        self.conections = additional_connections
         self.font_url = "fonts/lmk.json" if font_url is None else font_url
 
         super().__init__(url, uuid)
@@ -197,17 +204,7 @@ class Point_Cloud(Shape):
             str: reason of failure
         """
         return self.event("set_size", size)
-    def remove(self) -> bool or str:
-        """Remove point cloud
 
-        Args:
-            size (int): new point size
-
-        Returns:
-            bool: If sucessful
-            str: reason of failure
-        """
-        return self.event("remove", None)
     def as_dict(self):
         """Generate a dictionary from the passed arguements
 
@@ -256,7 +253,7 @@ class Point_Cloud(Shape):
 
         )
     @staticmethod
-    def from_uuid(url: str, _uuid: str) -> Self:
+    def from_uuid(url: str, _uuid: str):
         """Generate a Point Cloud object from a UUID on a graph
 
         Args:

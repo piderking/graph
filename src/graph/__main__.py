@@ -7,6 +7,17 @@ from graph.shapes import Shape, Point_Cloud, Box
 import json
 from time import time
 import os
+import logging
+from logging import info, warn
+
+logging.basicConfig(filename='graph.log', encoding='utf-8', level=logging.DEBUG)
+
+
+def has_no_empty_params(rule):
+    defaults = rule.defaults if rule.defaults is not None else ()
+    arguments = rule.arguments if rule.arguments is not None else ()
+    return len(defaults) >= len(arguments)
+
 def dict_to_table(dic: dict) -> None:
     """Visual Representation
 
@@ -17,14 +28,18 @@ def dict_to_table(dic: dict) -> None:
     _str.append("".join(["-" for _ in range(len(_str[0]))]))
     for c, d in enumerate(dic.keys()):
         _str.append("{}|({})|{}".format("".join(["0" for x in range(floor(len(dic.keys())/10)-1)])+str(c), d, dic[d] if len(str(dic[d])) < 60 else str(dic[d])[:60]+"...")) 
-    print("\n".join(_str))
+    info("Dictionary to Table: \n"+"\n".join(_str))
 class Data:
 
     def __init__(self, sync_db = True, fPath:str = os.path.join(os.path.abspath("."), "db.json")) -> None:
+
+
         self.app = Flask(__name__, 
             static_url_path='', 
-            static_folder='static',
-            template_folder='templates')
+            static_folder='assets/static',
+            template_folder='assets/templates'
+        )
+        info("Running from directory: {}".format(os.getcwd()))
         
         self.app.wsgi_app = AuthorizationMiddleWare(self.app.wsgi_app, self)
         self.app.config['SECRET_KEY'] = str(uuid4())
@@ -41,14 +56,13 @@ class Data:
         self.clients = [
 
         ]
-    
         # APIs
         self.api = [
             {
                 "id":"admin",
                 "passkey":"admin",
                 "code":"admin",
-                "actions":["did smth"]
+                "actions":[]
             }
         ]
 
@@ -60,19 +74,51 @@ class Data:
         else:
             if not os.path.exists(fPath): open(fPath, "w").write("{}")
         # Methods Define
-        @self.app.route("/")
+        @self.app.route("/", methods=["GET"])
         def home():
-            return {"client":url_for("client")}
+            """List Methods and Static Files
+            """
+            def list_dir(path) -> list:
+                _r = []
+                for item in os.scandir(path):
+                    if item.is_dir():
+                        _r.append({
+                            "folder":item.name,
+                            "contents": list_dir(item.path)
+                            
+                        })
+                    else:
+                        _r.append(os.path.relpath(item.path).replace("\\", "/").removeprefix("src/graph/assets"))
+                return _r
+            
+            links = {}
+            dirs = []
+            for rule in self.app.url_map.iter_rules():
+                # Filter out rules we can't navigate to in a browser
+                # and rules that require parameters
+                if has_no_empty_params(rule):
+                    url = url_for(rule.endpoint, **(rule.defaults or {}))
+                    links[rule.endpoint] = {
+                        "url": url,
+                        "endpoint": rule.endpoint,
+                        "doc": self.app.view_functions[rule.endpoint].__doc__.strip() if not self.app.view_functions[rule.endpoint].__doc__ is None else None,
+                        "methods": list(rule.methods),
+                    }
+            return {
 
-        @self.app.route("/status")
+                "links":links,
+                "static": list_dir(os.path.join(os.path.abspath("."), "src", "graph", "assets"))
+            }
+
+        @self.app.route("/status", methods=["GET"])
         def status():
+            """Initialize API"""
             uid = str(request.json["id"])
             passkey = str(request.json["passkey"])
             for i, api_user in enumerate(self.api):
-                print(api_user)
                 if api_user["id"] == uid:
                     if api_user["passkey"] == passkey:
-                        print("Previously Connected API User Join!")
+                        info("Previously Connected API User Join!")
                         if not api_user.get("code") is None:
                             
                             return {
@@ -94,7 +140,7 @@ class Data:
                                 "code":code
                             }, 200
                     else:
-                        print("Previously Connected API User Failed to input correct passkey")
+                        info("Previously Connected API User Failed to input correct passkey")
 
                         return {
                             "message": "Passkey Incorrect!",
@@ -120,7 +166,7 @@ class Data:
                         }, 300
 
 
-        @self.app.route('/client')
+        @self.app.route('/client', methods=["GET"])
         def client():
             return render_template("index.html")
         
@@ -128,21 +174,21 @@ class Data:
         
         @self.socketio.on('connect')
         def connection():
-            print("Client Connected with SID of {}".format(request.sid))
+            info("Client Connected with SID of {}".format(request.sid))
         @self.socketio.on('init')
         def start(data):
             _id = str(request.sid)
             self.clients.append({
                 "id": _id, 
             })
-            print("Client ({}) requests to initalize and sync".format(_id))
+            info("Client ({}) requests to initalize and sync".format(_id))
             emit("text", {"text": "Syncing", "time":1000})
             emit("sync", {
                 "len": 10,
                 "sid": _id,
                 "objects": self.objects
             }, to=_id)
-            print("Client ({}) finished sync".format(_id))
+            info("Client ({}) finished sync".format(_id))
         
         @self.socketio.on("disconnect")
         def disconnect():
@@ -153,23 +199,22 @@ class Data:
             raise Warning("User with SID: {} not found in clients connected list -- disconnect".format(request.sid))
 
 
-        @self.app.route("/point")
+        @self.app.route("/point", methods=["GET"])
         def nPoint():
-            
             try:
                 _point = Point_Cloud.from_dict(request.json).as_dict()
-                print("Point Event: {}".format(_point["event"]))
+                info("Point Event: {}".format(_point["event"]))
                 self.objects.append(_point)
                 dict_to_table(_point)
                 self.socketio.emit("point", _point)
                 return _point
             except Exception as e:
                 return {
-                    "reason":e()
+                    "reason":"e"
                 }
-        @self.app.route("/point/<uuid>")
+        @self.app.route("/point/<uuid>", methods=["GET"])
         def nPoint_look_up(uuid):
-            print("Looking up Point Cloud")
+            info("Looking up Point Cloud")
             for _object in self.objects:
                 if _object["uuid"] == uuid:
                     return _object, 200
@@ -177,7 +222,7 @@ class Data:
                 else:
                     return {"message": "Point Cloud with uuid was not found"}, 404
                           
-        @self.app.route("/box")
+        @self.app.route("/box", methods=["POST"])
         def nBox():
             # NOTE This doesn't work as intended right now TODO Fix Box? or Deprecate
             box = Box.from_dict(request.json)
@@ -188,7 +233,7 @@ class Data:
         @self.app.route("/remove")
         def nRemove():
             raise DeprecationWarning("Use /point instead")
-            print("Removing Object")
+            info("Removing Object")
             dic = dict(request.json)
             for c, i in enumerate(self.objects):
                 if i["uuid"] == dic["uuid"]:
@@ -220,20 +265,19 @@ class Data:
                 "exsists":False
             })  
 
-        @self.app.route("/objects")
+        @self.app.route("/objects", methods=["GET"])
         def all_objects():
             # /object or /object?uuid_only=true
             uuid_only = bool(request.args.get("uuid_only"))
             self.socketio.emit("objects", {})
             if uuid_only:
-                print("UUID")
                 return [
                     item["uuid"] for item in self.objects
                 ]
             else:
                 return self.objects
         
-        @self.app.route("/apis")
+        @self.app.route("/apis", methods=["GET"])
         def all_apis():
             return {
                 "apis": [
@@ -244,14 +288,14 @@ class Data:
                 ], "number": len(self.api)
             }
         
-        @self.app.route("/clients")
+        @self.app.route("/clients", methods=["GET"])
         def all_clients():
             return {
                 "clients": [
                    clients for clients in self.clients
                 ], "number": len(self.clients)
             }
-        @self.app.route('/save')
+        @self.app.route('/save', methods=["GET"])
         def save():
             self.saveToFile()
             return self._objects
@@ -287,7 +331,6 @@ class Data:
             except KeyboardInterrupt:
                 d.saveToFile()
     def saveToFile(self):
-        print(self._objects)
         open(self.fPath, "w").write(json.dumps(
             {
                 "objects": self._objects,
@@ -305,7 +348,7 @@ class AuthorizationMiddleWare():
         self.app = app
         self.data = data
         self.un_authorized = [
-            "points"
+            "point"
         ]
 
 
@@ -319,7 +362,7 @@ class AuthorizationMiddleWare():
             code = header.get("code")
 
             if uid == None or code == None:
-                print(uid, code)
+                info("{}:{} failed credentials".format(str(uid), str(code)))
 
                 raise Exception("Missing Credentials!")
             
@@ -327,9 +370,10 @@ class AuthorizationMiddleWare():
                 if api_user["id"] == uid and api_user["code"] == code:
                     return self.app(environ, start_response)
             raise Exception("No User Found!")
+        
         except Exception as e:
             # print("Authorization Failed ;(" + str(e))
-            res = Response(u'Authorization failed: {}'.format(str(e)), mimetype= 'text/plain', status=401)
+            res = Response(u'Authorization failed:{}'.format(str(e)), mimetype= 'text/plain', status=401)
             return res(environ, start_response)  
         
 

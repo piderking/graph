@@ -2,7 +2,7 @@ import requests
 import numpy as np
 from .shapes import Point_Cloud, Box, Shape
 from .util.config import URL
-
+import json
 
 class Graph:
     """Instance of a hosted graph (move objects and interact with them)
@@ -52,24 +52,38 @@ class Graph:
             str: uuid of object (should be the same)
         """
 
-        req = requests.get(self.url + "point", json=point_cloud.as_dict())
+        req = requests.get(self.url + "point", json=point_cloud.as_dict(),headers={'Authorization': json.dumps({"id":self.uid, "code":self.code})})
+        if req.status_code < 300:
+            return dict(req.json())["uuid"]
+        else:
+            print(req.content)
+            return
 
-        return dict(req.json())["uuid"]
+    def removeObject(self, uuid: str) -> dict:
+        obj: Point_Cloud = Point_Cloud.from_uuid(self.url, uuid)
+        obj.remove()
+        return obj
 
-    def removeObject(self, uuid: str, type: str) -> dict:
-        req = requests.get(self.url + "remove", json={"uuid":uuid, "type":type})
-        return req.json
+    def moveObject(self, uuid: str, x:float, y:float, z:float) -> dict:
+        obj: Point_Cloud = Point_Cloud.from_uuid(self.url, uuid)
+        obj.move(x, y, z)
+        return obj
+    def scaleObject(self, uuid: str, x:float, y:float, z:float) -> dict:
+        obj: Point_Cloud = Point_Cloud.from_uuid(self.url, uuid)
+        obj.scale(x, y, z)
+        return obj
+    def setPointSize(self, uuid: str,size:float) -> dict:
+        obj: Point_Cloud = Point_Cloud.from_uuid(self.url, uuid)
+        obj.set_size(size)
+        return obj
 
-    def moveObject(self, uuid: str, type: str, x:float, y:float, z:float) -> dict:
-        req = requests.get(self.url + "move", json={"uuid":uuid, "type":type, "position":{"x":x, "y":y, "z":z}})
-        return req.json
+    def setPointSize(self, uuid: str,color:int) -> dict:
+        obj: Point_Cloud = Point_Cloud.from_uuid(self.url, uuid)
+        obj.set_color(color)
+        return obj
 
-    def scaleObject(self, uuid: str, type: str, x:float, y:float, z:float) -> dict:
-        req = requests.get(self.url + "move", json={"uuid":uuid, "type":type, "scale":{"x":x, "y":y, "z":z}})
-        return req.json
-    def setPointSize(self, uuid: str, type: str, x:float, y:float, z:float) -> dict:
-        req = requests.get(self.url + "move", json={"uuid":uuid, "type":type, "scale":{"x":x, "y":y, "z":z}})
-        return req.json
+
+ 
 
 
 
@@ -81,7 +95,7 @@ class Graph:
             "id":self.uid,
             "passkey":self.passkey,
             "create":True,
-        }, headers={'Authorization': 'uid:peter'})
+        })
         if req.status_code < 300:
             self.code = req.json()["code"]
             return req.json

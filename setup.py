@@ -6,4 +6,5 @@ setup(
     description="Grapher",
     packages=['graph'],
     package_dir={'':'src'},
+    install_requires=['docutils', "requests", "flask", "flask_socketio", "numpy" ]
 )
