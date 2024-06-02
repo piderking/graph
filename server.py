@@ -57,7 +57,8 @@ class Data:
             self._objects = jso.get("objects") if not jso.get("objects") is None else self.objects 
             self.clients = jso.get("clients") if not jso.get("clients") is None else self.clients  
             self.api = jso.get("api") if not jso.get("api") is None else self.objects   
-
+        else:
+            if not os.path.exists(fPath): open(fPath, "w").write("{}")
         # Methods Define
         @self.app.route("/")
         def home():
