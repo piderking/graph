@@ -1,15 +1,16 @@
-from flask import Flask, Response, render_template, url_for, request
+from flask import Flask, Request, Response, render_template, url_for, request
 from flask_socketio import SocketIO, send,emit
 from uuid import uuid4
 from typing import Type
 from math import floor
-from graph.shapes import *
-
+from graph.shapes import Shape, Point_Cloud, Box
+import json
+from time import time
 def dict_to_table(dic: dict) -> None:
     """Visual Representation
 
     Args:
-        dic (dict): _description_
+        dic (dict): dictionary to be viewd
     """
     _str = ["Dictionary: <{}>".format(id(dict))]
     _str.append("".join(["-" for _ in range(len(_str[0]))]))
@@ -23,16 +24,31 @@ class Data:
             static_url_path='', 
             static_folder='static',
             template_folder='templates')
-        self.app.config['SECRET_KEY'] = 'secret!'
+        
+        self.app.wsgi_app = AuthorizationMiddleWare(self.app.wsgi_app, self)
+        self.app.config['SECRET_KEY'] = str(uuid4())
         self.socketio = SocketIO(self.app)
         self._objects = [
             
         ]
-        
-        # Clients
-        self.clients = {
 
-        }
+        
+        # Clients (Web Pages)
+        self.clients = [
+
+        ]
+    
+        # APIs
+        self.api = [
+            {
+                "id":"admin",
+                "passkey":"admin",
+                "code":"admin",
+                "actions":["did smth"]
+            }
+        ]
+
+        
 
 
         # Methods Define
@@ -42,13 +58,62 @@ class Data:
 
         @self.app.route("/status")
         def status():
-            return Response("Good!", 200)
+            uid = str(request.json["id"])
+            passkey = str(request.json["passkey"])
+            for i, api_user in enumerate(self.api):
+                print(api_user)
+                if api_user["id"] == uid:
+                    if api_user["passkey"] == passkey:
+                        print("Previously Connected API User Join!")
+                        if not api_user.get("code") is None:
+                            
+                            return {
+                                "message": "Good!",
+                                "actions": "\n".join(api_user["actions"]),
+                                "code":api_user["code"]
+                            }, 200
+                        else:
+                            code = str(uuid4())
+                            self.api[i] = {
+                                "id": api_user["id"],
+                                "passkey": api_user["passkey"],
+                                "actions": api_user["actions"],
+                                "code": code
+                            }
+                            return {
+                                "message": "Good!",
+                                "actions": "\n".join(api_user.actions),
+                                "code":code
+                            }, 200
+                    else:
+                        print("Previously Connected API User Failed to input correct passkey")
+
+                        return {
+                            "message": "Passkey Incorrect!",
+                        }, 400
+            if bool(request.json["create"]) == True:
+                code = str(uuid4())
+
+                self.api.append({
+                    "id":uid,
+                    "passkey":passkey,
+                    "code":code,
+                    "actions":[]
+                })
+                return {
+                            "message": "Created!",
+                            "actions": "",
+                            "code":code
+                        }, 200
+            else:
+                return {
+                            "message": "Not Account exsist and didn't want to create one!",
+                            "actions": ""
+                        }, 300
 
 
         @self.app.route('/client')
         def client():
-            
-
             return render_template("index.html")
         
 
@@ -59,9 +124,9 @@ class Data:
         @self.socketio.on('init')
         def start(data):
             _id = str(request.sid)
-            self.clients[_id] = {
-                "id": _id, "sync": False
-            }
+            self.clients.append({
+                "id": _id, 
+            })
             print("Client ({}) requests to initalize and sync".format(_id))
             emit("text", {"text": "Syncing", "time":1000})
             emit("sync", {
@@ -71,20 +136,42 @@ class Data:
             }, to=_id)
             print("Client ({}) finished sync".format(_id))
         
+        @self.socketio.on("disconnect")
+        def disconnect():
+            for i, client in enumerate(self.clients):
+                if client["id"] == request.sid:
+                    self.clients.pop(i)
+                    return
+            raise Warning("User with SID: {} not found in clients connected list -- disconnect".format(request.sid))
 
 
-        # TODO Add on Box, and Point Cloud to server to cache so new instances will open with them
         @self.app.route("/point")
         def nPoint():
-            print("Creating Point")
-            self.objects.append(Point_Cloud.from_dict(request.json).as_dict())
-            dict_to_table(Point_Cloud.from_dict(request.json).as_dict())
-            self.socketio.emit("point", Point_Cloud.from_dict(request.json).as_dict())
-            return Point_Cloud.from_dict(request.json).as_dict()
-        
+            
+            try:
+                _point = Point_Cloud.from_dict(request.json).as_dict()
+                print("Point Event: {}".format(_point["event"]))
+                self.objects.append(_point)
+                dict_to_table(_point)
+                self.socketio.emit("point", _point)
+                return _point
+            except Exception as e:
+                return {
+                    "reason":e()
+                }
+        @self.app.route("/point/<uuid>")
+        def nPoint_look_up(uuid):
+            print("Looking up Point Cloud")
+            for _object in self.objects:
+                if _object["uuid"] == uuid:
+                    return _object, 200
+                    
+                else:
+                    return {"message": "Point Cloud with uuid was not found"}, 404
+                          
         @self.app.route("/box")
         def nBox():
-            print("Creating Box")
+            # NOTE This doesn't work as intended right now TODO Fix Box? or Deprecate
             box = Box.from_dict(request.json)
             self.objects.append(box.as_dict())
             self.socketio.emit("box", box.as_dict())
@@ -92,6 +179,7 @@ class Data:
         
         @self.app.route("/remove")
         def nRemove():
+            raise DeprecationWarning("Use /point instead")
             print("Removing Object")
             dic = dict(request.json)
             for c, i in enumerate(self.objects):
@@ -107,6 +195,7 @@ class Data:
         
         @self.app.route("/move")
         def nMove():
+            raise DeprecationWarning("Use /point instead")
             print("Moving Object")
             dic = dict(request.json)
             for c, i in enumerate(self.objects):
@@ -125,6 +214,7 @@ class Data:
 
         @self.app.route("/objects")
         def all_objects():
+            # /object or /object?uuid_only=true
             uuid_only = bool(request.args.get("uuid_only"))
             self.socketio.emit("objects", {})
             if uuid_only:
@@ -134,7 +224,26 @@ class Data:
                 ]
             else:
                 return self.objects
- 
+        
+        @self.app.route("/apis")
+        def all_apis():
+            return {
+                "apis": [
+                    {
+                        "id":api["id"],
+                        "actions":"\n".join(api["actions"])
+                    } for api in self.api
+                ], "number": len(self.api)
+            }
+        
+        @self.app.route("/clients")
+        def all_clients():
+            return {
+                "clients": [
+                   clients for clients in self.clients
+                ], "number": len(self.clients)
+            }
+
     @property
     def objects(self):
         return self._objects
@@ -155,18 +264,56 @@ class Data:
             self.socketio.emit("box", n_box.as_dict())
         elif type(n_box) is Point_Cloud:
             self.socketio.emit("point", n_box.as_dict())
-
+    def addAction(self, uid: str, action: str):
+        for i, api_user in enumerate(self.api):
+            if api_user["id"] == uid:
+                self.api[i]["actions"].append(action)
     def run(self):
         d.socketio.run(d.app,debug=True)
 
 
-d = Data()
+class AuthorizationMiddleWare():
+    '''
+    Simple WSGI middleware
+    '''
 
+    def __init__(self, app, data: Data):
+        self.app = app
+        self.data = data
+        self.un_authorized = [
+            "points"
+        ]
+
+
+    def __call__(self, environ, start_response):
+        _request = Request(environ)
+        if not _request.url.split("/")[-1].strip().lower() in self.un_authorized:
+            return self.app(environ, start_response)
+        try:
+            header = json.loads(_request.headers.get("Authorization"))
+            uid = header.get("id")
+            code = header.get("code")
+
+            if uid == None or code == None:
+                print(uid, code)
+
+                raise Exception("Missing Credentials!")
+            
+            for api_user in self.data.api:
+                if api_user["id"] == uid and api_user["code"] == code:
+                    return self.app(environ, start_response)
+            raise Exception("No User Found!")
+        except Exception as e:
+            # print("Authorization Failed ;(" + str(e))
+            res = Response(u'Authorization failed: {}'.format(str(e)), mimetype= 'text/plain', status=401)
+            return res(environ, start_response)  
+        
 
 
 
     
 if __name__ == '__main__':
+    d = Data()
     #d.objects = Box({"x":1,"y":1,"z":1}, {"x":1,"y":1,"z":1},9009)
     #d.objects = Box({"x":1,"y":1,"z":1}, {"x":2,"y":1,"z":1},9009)
     d.run()

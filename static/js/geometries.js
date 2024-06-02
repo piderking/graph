@@ -188,6 +188,7 @@ export class Text{
 }
 export class Points{
     constructor(scene, uuid, _points, options){
+        console.log(_points)
         this.points = []
         this.drawn_lines = []
         // THREEjs Scene + Obj UUID
@@ -207,12 +208,13 @@ export class Points{
         
         // Assign Static Variables if Variables passed are undefined
         options ??= {}
-        options.scale ??= 1
+        options.scale ??= {x:1, y:1, z:1}
         options.size ??= 1
         options.position ??= { x:1, y:1, z:1}
         options.color ??= 9001
         options.text ??= false
         options.lines ??= false
+        options.additional_connections ??= []
 
         
         
@@ -223,7 +225,7 @@ export class Points{
         this.size = options.size
         this.lines = options.lines
         this.text = options.text
-
+        this.additional_connections = options.additional_connections
 
         this._mat =  new THREE.PointsMaterial({
             color: this.color
@@ -246,7 +248,6 @@ export class Points{
            this._mat
         )
         // Lines 
-        //TODO Lines are not working, all data is here
         if (this.lines){
             connections.forEach((el, index)=>{
                 
@@ -254,12 +255,26 @@ export class Points{
                     new THREE.BufferGeometry().setFromPoints( [this.points[el[0]], this.points[el[1]]] ), 
                     new THREE.LineBasicMaterial({ color: 9001, 	linewidth: 4 })
                 )
-                //line.scale(this.scale.x, this.scale.y, this.scale.z)
+                this.drawn_lines.push(line)
+                this.scene.add(line)
+            })
+
+
+        } else {
+            console.log("No Connection on Point CLoud: " + this.uuid)
+        }
+        // Additional Connections
+        if (this.additional_connections.length > 0){
+            this.additional_connections.forEach((el, index)=>{
+                let line = new THREE.LineSegments( 
+                    new THREE.BufferGeometry().setFromPoints( [this.points[el[0]], this.points[el[1]]] ), 
+                    new THREE.LineBasicMaterial({ color: el[3] ?? 9001, 	linewidth: el[2] ?? 4 })
+                )
                 this.drawn_lines.push(line)
                 this.scene.add(line)
             })
         } else {
-            console.log("No Connection on Point CLoud: " + this.uuid)
+            console.log("No Additional Connection on Point Cloud: " + this.uuid)
         }
 
         //this._mesh.scale.set(this.scale.x, this.scale.y, this.scale.z, )

@@ -51,9 +51,18 @@ export class Communications {
             case "box":
               this.addBox(object.uuid, object.scale, object.position, object.color)
             case "point cloud":
-              console.log(object)
-              this.addPointCloud(object.uuid,object.scale, object.position, object.points, object.color, object.size, object.lines, object.text)
-          }
+              this.addPointCloud(
+                object.uuid, object.points, {
+                  scale: object.scale,
+                  size: object.size,
+                  position: object.position,
+                  color: object.color,
+                  text: object.text,
+                  additional_connections: object.additional_connections,
+                  lines: object.lines,
+                }
+              )
+            }
         })
 
         // Now Accept New Objects
@@ -124,7 +133,19 @@ export class Communications {
           fetch(data.font_url).then(
             t => t.text()
           ).then(
-            p = () => {this.addPointCloud(data.uuid, data.scale, data.position, data.points, data.color, data.size, data.lines, r)}
+            p => {
+                this.addPointCloud(
+                  data.uuid, data.points, {
+                    scale: data.scale,
+                    size: data.size,
+                    position: data.position,
+                    color: data.color,
+                    text: data.text,
+                    lines: data.lines,
+                    additional_connections: data.additional_connections
+                  }
+                )              
+            }
           )
           
         } else if (data.event == "remove"){
@@ -159,7 +180,7 @@ export class Communications {
         }else if (data.event == 'scale'){
           this.objects.forEach((pc, index)=>{
             if (pc.uuid == data.uuid){
-              this.objects[index].scale(data.position.x, data.position.y, data.position.z )
+              this.objects[index].scale(data.scale.x, data.scale.y, data.scale.z )
               return
             }
           })
@@ -190,10 +211,10 @@ export class Communications {
       }
     }
     
-    addPointCloud(uuid, scale, position, points, color, size, lines, text){
-      let _points = new Points(this.scene, uuid, points, {scale, position, points, color, size, lines, text})
-      console.log(_points)
+    addPointCloud(uuid, points, options){
+      let _points = new Points(this.scene, uuid, points, options)
       this.objects.push(_points)
+      console.log(_points)
       return _points
     }
 
