@@ -12,6 +12,7 @@ import requests
 from .util.config import URL
 from .exceptions import ShapeNotFound, NoURLSpecified
 import numpy as np
+import json
 class Shape:
     """Base Class"""
     uuid = str(uuid4())
@@ -106,7 +107,7 @@ class Point_Cloud(Shape):
         self.font_url = "fonts/lmk.json" if font_url is None else font_url
 
         super().__init__(url, uuid)
-    def event(self, event: str, data:dict or int) -> bool or str:
+    def event(self, event: str, data:dict or int, auth_id:str, auth_code: str) -> bool or str:
         """Trigger Events
 
         Args:
@@ -133,7 +134,7 @@ class Point_Cloud(Shape):
                 "y":data["y"],
                 "z":data["z"],
             } if type(data) is dict else data
-        })
+        },headers={'Authorization': json.dumps({"id":auth_id, "code":auth_code})})
         if res.status_code < 300:
             if event == "remove":
                 return True

@@ -348,7 +348,7 @@ class AuthorizationMiddleWare():
         self.app = app
         self.data = data
         self.un_authorized = [
-            "point"
+            #"point" # Disabled temporarily for testing
         ]
 
 
